@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Client HTTP</title>
+</head>
+<body>
+
+  <select id="method">
+    <option>GET</option>
+    <option>POST</option>
+    <option>PUT</option>
+    <option>PATCH</option>
+    <option>DELETE</option>
+    <option>FETCH</option>
+  </select>
+
+  <input type="text" id="url" placeholder="URL" size="50">
+  <button onclick="envoyer()">Envoyer</button>
+
+  <br><br>
+
+  <input type="text" id="hkey" placeholder="Header key">
+  <input type="text" id="hval" placeholder="Header value">
+  <button onclick="ajouterHeader()">+</button>
+
+  <ul id="liste-headers"></ul>
+
+  <br>
+  <textarea id="body" rows="6" cols="60" placeholder="Body"></textarea>
+
+  <hr>
+
+  <p id="statut"></p>
+  <pre id="resp-headers"></pre>
+  <textarea id="reponse" rows="6" cols="60" readonly placeholder="Response body"></textarea>
+
+  <script>
+    let headers = {};
+
+    function ajouterHeader() {
+      let k = document.getElementById("hkey").value;
+      let v = document.getElementById("hval").value;
+      if (!k || !v) return;
+
+      headers[k] = v;
+
+      // afficher dans la liste
+      let li = document.createElement("li");
+      li.textContent = k + ": " + v;
+      document.getElementById("liste-headers").appendChild(li);
+
+      document.getElementById("hkey").value = "";
+      document.getElementById("hval").value = "";
+    }
+
+    async function envoyer() {
+      let url = document.getElementById("url").value;
+      let method = document.getElementById("method").value;
+      let body = document.getElementById("body").value;
+
+      let options = { method, headers };
+      if (method !== "GET" && body) options.body = body;
+
+      try {
+        let res = await fetch(url, options);
+
+        document.getElementById("statut").textContent = "Status: " + res.status + " " + res.statusText;
+
+        let h = "";
+        res.headers.forEach((v, k) => h += k + ": " + v + "\n");
+        document.getElementById("resp-headers").textContent = h;
+
+        let text = await res.text();
+        try {
+          document.getElementById("reponse").value = JSON.stringify(JSON.parse(text), null, 2);
+        } catch {
+          document.getElementById("reponse").value = text;
+        }
+
+      } catch (e) {
+        document.getElementById("statut").textContent = "Erreur: " + e.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
